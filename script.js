@@ -1,5 +1,4 @@
 const player = document.getElementById('player');
-const background = document.getElementById('background');
 const ground = document.getElementById('ground');
 const projectsContainer = document.getElementById('projects-container');
 const modal = document.getElementById('project-modal');
@@ -10,6 +9,7 @@ const closeModal = document.getElementById('close-modal');
 const leftBtn = document.getElementById('left-btn');
 const rightBtn = document.getElementById('right-btn');
 const jumpBtn = document.getElementById('jump-btn');
+const clouds = document.getElementById('clouds');
 
 let playerPos = 50;
 let isJumping = false;
@@ -28,12 +28,23 @@ const projects = [
     { title: "Project 10", description: "A natural language processing API", link: "https://example.com/project10" }
 ];
 
+function createClouds() {
+    for (let i = 0; i < 5; i++) {
+        const cloud = document.createElement('div');
+        cloud.classList.add('cloud');
+        cloud.style.left = `${Math.random() * 100}%`;
+        cloud.style.top = `${Math.random() * 50}px`;
+        clouds.appendChild(cloud);
+    }
+}
+
 function createProjects() {
     projects.forEach((project, index) => {
         const projectElement = document.createElement('div');
         projectElement.classList.add('project');
         projectElement.style.left = `${(index + 1) * 800}px`;
-        projectElement.style.bottom = '150px';
+        projectElement.style.bottom = '30%';
+        projectElement.textContent = '?';
         projectElement.onclick = () => showProjectDetails(project);
         projectsContainer.appendChild(projectElement);
     });
@@ -57,7 +68,6 @@ function movePlayer(direction) {
         playerPos += 10;
     }
     player.style.left = `${playerPos}px`;
-    background.style.transform = `translateX(-${playerPos * 0.5}px)`;
     ground.style.transform = `translateX(-${playerPos}px)`;
     projectsContainer.style.transform = `translateX(-${playerPos}px)`;
 }
@@ -69,14 +79,14 @@ function jump() {
         const jumpInterval = setInterval(() => {
             if (jumpHeight < 100 && !isJumping) {
                 jumpHeight += 5;
-                player.style.bottom = `${100 + jumpHeight}px`;
-            } else if (jumpHeight >= 100 || isJumping) {
+                player.style.bottom = `${30 + jumpHeight}%`;
+            } else {
                 jumpHeight -= 5;
-                player.style.bottom = `${100 + jumpHeight}px`;
+                player.style.bottom = `${30 + jumpHeight}%`;
                 if (jumpHeight <= 0) {
                     clearInterval(jumpInterval);
                     isJumping = false;
-                    player.style.bottom = '100px';
+                    player.style.bottom = '30%';
                 }
             }
         }, 20);
@@ -98,7 +108,8 @@ jumpBtn.addEventListener('click', jump);
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') movePlayer('left');
     if (e.key === 'ArrowRight') movePlayer('right');
-    if (e.key === 'ArrowUp') jump();
+    if (e.key === 'ArrowUp' || e.key === ' ') jump();
 });
 
+createClouds();
 createProjects();
