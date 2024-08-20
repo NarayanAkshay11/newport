@@ -1,5 +1,6 @@
-const player = document.getElementById('player');
+const mario = document.getElementById('mario');
 const ground = document.getElementById('ground');
+const sky = document.getElementById('sky');
 const projectsContainer = document.getElementById('projects-container');
 const modal = document.getElementById('project-modal');
 const projectTitle = document.getElementById('project-title');
@@ -8,11 +9,9 @@ const projectLink = document.getElementById('project-link');
 const closeModal = document.getElementById('close-modal');
 const leftBtn = document.getElementById('left-btn');
 const rightBtn = document.getElementById('right-btn');
-const jumpBtn = document.getElementById('jump-btn');
 const clouds = document.getElementById('clouds');
 
-let playerPos = 50;
-let isJumping = false;
+let marioPos = 50;
 let gameLoop;
 
 const projects = [
@@ -42,10 +41,10 @@ function createProjects() {
     projects.forEach((project, index) => {
         const projectElement = document.createElement('div');
         projectElement.classList.add('project');
-        projectElement.style.left = `${(index + 1) * 800}px`;
+        projectElement.style.left = `${(index + 1) * 500}px`;
         projectElement.style.bottom = '30%';
         projectElement.textContent = '?';
-        projectElement.onclick = () => showProjectDetails(project);
+        projectElement.dataset.index = index;
         projectsContainer.appendChild(projectElement);
     });
 }
@@ -61,54 +60,59 @@ closeModal.onclick = () => {
     modal.style.display = 'none';
 };
 
-function movePlayer(direction) {
-    if (direction === 'left' && playerPos > 0) {
-        playerPos -= 10;
-    } else if (direction === 'right' && playerPos < 9950) {
-        playerPos += 10;
+function moveMario(direction) {
+    if (direction === 'left' && marioPos > 0) {
+        marioPos -= 5;
+        mario.style.transform = 'scaleX(-1)';
+    } else if (direction === 'right' && marioPos < 10000) {
+        marioPos += 5;
+        mario.style.transform = 'scaleX(1)';
     }
-    player.style.left = `${playerPos}px`;
-    ground.style.transform = `translateX(-${playerPos}px)`;
-    projectsContainer.style.transform = `translateX(-${playerPos}px)`;
+    mario.style.left = `${marioPos}px`;
+
+    // Move the frame with Mario
+    if (marioPos > window.innerWidth / 2 && marioPos < 10000 - window.innerWidth / 2) {
+        ground.style.transform = `translateX(-${marioPos - window.innerWidth / 2}px)`;
+        sky.style.transform = `translateX(-${(marioPos - window.innerWidth / 2) * 0.5}px)`;
+        projectsContainer.style.transform = `translateX(-${marioPos - window.innerWidth / 2}px)`;
+    }
+
+    checkCollision();
 }
 
-function jump() {
-    if (!isJumping) {
-        isJumping = true;
-        let jumpHeight = 0;
-        const jumpInterval = setInterval(() => {
-            if (jumpHeight < 100 && !isJumping) {
-                jumpHeight += 5;
-                player.style.bottom = `${30 + jumpHeight}%`;
-            } else {
-                jumpHeight -= 5;
-                player.style.bottom = `${30 + jumpHeight}%`;
-                if (jumpHeight <= 0) {
-                    clearInterval(jumpInterval);
-                    isJumping = false;
-                    player.style.bottom = '30%';
-                }
-            }
-        }, 20);
-    }
+function checkCollision() {
+    const projects = document.querySelectorAll('.project');
+    projects.forEach((project) => {
+        const projectRect = project.getBoundingClientRect();
+        const marioRect = mario.getBoundingClientRect();
+
+        if (
+            marioRect.left < projectRect.right &&
+            marioRect.right > projectRect.left &&
+            marioRect.top < projectRect.bottom &&
+            marioRect.bottom > projectRect.top
+        ) {
+            const projectIndex = parseInt(project.dataset.index);
+            showProjectDetails(projects[projectIndex]);
+            project.style.visibility = 'hidden';
+        }
+    });
 }
 
 leftBtn.addEventListener('mousedown', () => {
-    gameLoop = setInterval(() => movePlayer('left'), 50);
+    gameLoop = setInterval(() => moveMario('left'), 20);
 });
 
 rightBtn.addEventListener('mousedown', () => {
-    gameLoop = setInterval(() => movePlayer('right'), 50);
+    gameLoop = setInterval(() => moveMario('right'), 20);
 });
 
 leftBtn.addEventListener('mouseup', () => clearInterval(gameLoop));
 rightBtn.addEventListener('mouseup', () => clearInterval(gameLoop));
-jumpBtn.addEventListener('click', jump);
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') movePlayer('left');
-    if (e.key === 'ArrowRight') movePlayer('right');
-    if (e.key === 'ArrowUp' || e.key === ' ') jump();
+    if (e.key === 'ArrowLeft') moveMario('left');
+    if (e.key === 'ArrowRight') moveMario('right');
 });
 
 createClouds();
